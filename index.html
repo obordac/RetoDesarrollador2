@@ -1,0 +1,331 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no" />
+  <title>FeatureTable widget with popup interaction | Sample | ArcGIS API for JavaScript 4.21</title>
+ 
+  <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.21/"></script>
+
+  <style>
+    html,
+    body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .esri-popup--is-docked-top-right .esri-popup__main-container {
+      max-height: 100%;
+    }
+
+    #appContainer {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+    }
+
+    #viewDiv {
+      flex: 1;
+      width: 100%;
+    }
+
+    .container {
+      display: flex;
+      flex: 1;
+      width: 100%;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 45px;
+      height: 22px;
+      vertical-align: middle;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      -webkit-transition: 0.4s;
+      transition: 0.4s;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 1px;
+      background-color: white;
+      -webkit-transition: 0.4s;
+      transition: 0.4s;
+    }
+
+    input:checked+.slider {
+      background-color: #2196f3;
+    }
+
+    input:focus+.slider {
+      box-shadow: 0 0 1px #2196f3;
+    }
+
+    input:checked+.slider:before {
+      -webkit-transform: translateX(20px);
+      -ms-transform: translateX(20px);
+      transform: translateX(20px);
+    }
+
+    /* Rounded sliders */
+
+    .slider.round {
+      border-radius: 20px;
+    }
+
+    .slider.round:before {
+      border-radius: 50%;
+    }
+
+    .labelText {
+      padding-left: 5px;
+      font-size: 15px;
+    }
+
+    #mainDiv {
+      padding: 8px;
+    }
+
+  </style>
+
+  <script>
+    require([
+        "esri/config",
+        "esri/WebMap",
+         "esri/core/watchUtils",
+        "esri/Map", 
+        "esri/layers/FeatureLayer",
+        "esri/widgets/FeatureTable",
+        "esri/views/MapView",
+        "esri/widgets/ScaleBar",
+        "esri/widgets/Legend",
+      "esri/widgets/Locate"
+    ], (
+      esriConfig,WebMap, watchUtils,Map,FeatureLayer,FeatureTable,MapView,ScaleBar,Legend,Locate
+    ) => {
+      
+      esriConfig.apiKey = "AAPK996efc1766d94aee93e80f6deed5cb1eL0gRhWzTQkByu6hfk2Wq7Gw5TSYyHj-btLugKENVih3gAZ5NnaBS8Jum51DOLvbr";
+      
+      let selectedFeature, id;
+      const features = [];
+
+      const webmap = new WebMap({
+        portalItem: {
+          id: "85629dff00984699af3a9ef9087e3df8"
+        }
+      });
+
+      const view = new MapView({
+        map: webmap,
+        container: "viewDiv",
+        zoom: 10,
+        center: [-74.110103, 4.656581],
+        popup: {
+          dockEnabled: true,
+          dockOptions: {
+            buttonEnabled: false,
+            breakpoint: false
+          }
+        }
+      });
+      
+      const scalebar = new ScaleBar({
+        view: view
+      });
+view.ui.add(scalebar, "bottom-left");
+      
+       
+      const legend = new Legend ({
+        view: view
+      });
+      
+              const locateBtn = new Locate({
+          view: view
+        });
+      
+       
+      view.ui.add(legend, "top-right");
+      
+      view.ui.add(locateBtn, {
+          position: "top-left"
+        });
+      // When view is ready, find feature layer and set title and outFields
+      view.when(() => {
+        const featureLayer = webmap.layers.getItemAt(2);
+        featureLayer.title = "Seguimiento";
+        featureLayer.outFields = ["*"];
+
+        // Get references to div elements for toggling table visibility
+        const appContainer = document.getElementById("appContainer");
+        const tableContainer = document.getElementById("tableContainer");
+        const tableDiv = document.getElementById("tableDiv");
+
+        // Create FeatureTable
+        const featureTable = new FeatureTable({
+          view: view, // make sure to pass in view in order for selection to work
+          layer: featureLayer,
+          fieldConfigs: [{
+              name: "ciudad_de_residencia",
+              label: "Municipio",
+              direction: "asc"
+            },
+            {
+              name: "localidad",
+              label: "Nombre Localidad"
+            },
+            {
+              name: "direccion",
+              label: "Direccion"
+            },
+            {
+              name: "genero",
+              label: "Genero"
+            },
+            {
+              name: "edad",
+              label: "edad"
+            },                         
+            {
+              name: "ocupacion",
+              label: "Ocupacion"
+            },                         
+             {
+              name: "facultad",
+              label: "Facultad"
+            },                          
+            {
+              name: "caso_confirmado",
+              label: "Casos Confirmados"
+            },
+            {
+              name: "caso_activo",
+              label: "Casos Activos"
+            },
+            {
+              name: "vacuando",
+              label: "Personas Vacunadas"
+            },
+            {
+              name: "esquema",
+              label: "Dosis"
+            },
+            {
+              name: "laboratorio",
+              label: "Tipo de vacuna que tiene"
+            },                    
+            {
+              name: "presencialidad",
+              label: "Respuesta de presencialidad"
+            }
+          ],
+          container: tableDiv
+        });
+
+        // Add toggle visibility slider
+        view.ui.add(document.getElementById("mainDiv"), "top-right");
+
+        // Get reference to div elements
+        const checkboxEle = document.getElementById("checkboxId");
+        const labelText = document.getElementById("labelText");
+
+        // Listen for when toggle is changed, call toggleFeatureTable function
+        checkboxEle.onchange = () => {
+          toggleFeatureTable();
+        };
+
+        function toggleFeatureTable() {
+          // Check if the table is displayed, if so, toggle off. If not, display.
+          if (!checkboxEle.checked) {
+            appContainer.removeChild(tableContainer);
+            labelText.innerHTML =
+              "Show Feature Table";
+          } else {
+            appContainer.appendChild(tableContainer);
+            labelText.innerHTML =
+              "Hide Feature Table";
+          }
+        }
+
+        featureTable.on("selection-change", (changes) => {
+
+          // If row is unselected in table, remove it from the features array
+          changes.removed.forEach((item) => {
+            const data = features.find((data) => {
+              return data.feature === item.feature;
+            });
+          });
+
+          // If a row is selected, add to the features array
+          changes.added.forEach((item) => {
+            const feature = item.feature;
+            features.push({
+              feature: feature
+            });
+
+            // Listen for row selection in the feature table. If the popup is open and a row is selected that is not the same feature as opened popup, close the existing popup.
+            if ((feature.attributes.OBJECTID !== id) && (view.popup.visible === true)) {
+              featureTable.deselectRows(selectedFeature);
+              view.popup.close();
+            }
+          });
+        });
+
+        // Watch for the popup's visible property. Once it is true, clear the current table selection and select the corresponding table row from the popup
+        watchUtils.watch(view.popup.viewModel, "active", (graphic) => {
+          selectedFeature = view.popup.selectedFeature;
+          if ((selectedFeature !== null) && (view.popup.visible !== false)) {
+            featureTable.clearSelection();
+            featureTable.selectRows(view.popup.selectedFeature);
+            id = selectedFeature.getObjectId();
+          }
+        });
+      });
+    });
+
+    
+    
+    
+  </script>
+</head>
+
+<body>
+  <div id="appContainer">
+    <div id="viewDiv"></div>
+    <div id="tableContainer" class="container">
+      <div id="tableDiv"></div>
+    </div>
+    <div id="mainDiv" class="esri-widget">
+      <label class="switch">
+        <input id="checkboxId" type="checkbox" checked="yes">
+        <span class="slider round"></span>
+      </label>
+      <label class="labelText" id="labelText">Hide feature table</label>
+    </div>
+  </div>
+</body>
+
+</html>
